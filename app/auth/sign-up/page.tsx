@@ -69,10 +69,10 @@ export default function SignUpPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
-              EV
+              PE
             </div>
             <CardTitle className="text-2xl">Créer un compte</CardTitle>
-            <CardDescription>Rejoignez la communauté EventHub</CardDescription>
+            <CardDescription>Rejoignez la communauté Prest'Event</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-5">
