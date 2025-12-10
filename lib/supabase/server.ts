@@ -13,7 +13,7 @@ export async function createClient() {
         try {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
         } catch {
-          // Ignored in Server Components
+          // Called from Server Component - ignore
         }
       },
     },
