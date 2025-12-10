@@ -1,200 +1,87 @@
 import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { MapPin, Mail, Phone, Megaphone, Briefcase, MessageSquare, Settings } from "lucide-react"
-import Link from "next/link"
 import { redirect } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect("/auth/login")
+  if (error || !user) {
+    redirect("/connexion")
   }
 
+  // Fetch user profile
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
-  if (!profile) {
-    redirect("/auth/login")
-  }
-
-  // Get counts
-  const isClient = profile.role === "client"
-
-  const { count: annoncesCount } = isClient
-    ? await supabase.from("annonces").select("*", { count: "exact", head: true }).eq("user_id", user.id)
-    : { count: 0 }
-
-  const { count: servicesCount } = !isClient
-    ? await supabase.from("services").select("*", { count: "exact", head: true }).eq("user_id", user.id)
-    : { count: 0 }
-
-  const { count: messagesCount } = await supabase
-    .from("conversations")
-    .select("*", { count: "exact", head: true })
-    .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-
   return (
-    <div className="min-h-screen bg-muted/30 py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <Avatar className="h-24 w-24 ring-4 ring-rose-500/20">
-                    <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback
-                      className={`text-white text-2xl ${isClient ? "bg-gradient-to-br from-green-500 to-emerald-500" : "bg-gradient-to-br from-blue-500 to-cyan-500"}`}
-                    >
-                      {profile.full_name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h1 className="text-2xl font-bold mt-4">{profile.full_name || "Utilisateur"}</h1>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2 ${isClient ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}
-                  >
-                    {isClient ? "Client" : "Prestataire"}
-                  </span>
-
-                  {profile.location && (
-                    <p className="flex items-center gap-1 text-muted-foreground mt-3">
-                      <MapPin className="h-4 w-4" />
-                      {profile.location}
-                    </p>
-                  )}
-
-                  <div className="w-full mt-6 space-y-3">
-                    {profile.email && (
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm truncate">{profile.email}</span>
-                      </div>
-                    )}
-                    {profile.phone && (
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{profile.phone}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <Link href="/settings" className="w-full mt-4">
-                    <Button variant="outline" className="w-full bg-transparent">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Modifier mon profil
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="min-h-svh bg-background p-6 md:p-10">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Tableau de bord</h1>
+            <p className="text-muted-foreground">Bienvenue, {profile?.full_name || user.email}</p>
           </div>
+          <form action="/api/auth/signout" method="POST">
+            <Button variant="outline" type="submit">
+              Déconnexion
+            </Button>
+          </form>
+        </div>
 
-          {/* Stats & Actions */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Stats */}
-            <div className="grid sm:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div
-                    className={`w-12 h-12 mx-auto rounded-xl flex items-center justify-center ${isClient ? "bg-green-100" : "bg-blue-100"}`}
-                  >
-                    {isClient ? (
-                      <Megaphone className="h-6 w-6 text-green-600" />
-                    ) : (
-                      <Briefcase className="h-6 w-6 text-blue-600" />
-                    )}
-                  </div>
-                  <p className="text-3xl font-bold mt-3">{isClient ? annoncesCount : servicesCount}</p>
-                  <p className="text-sm text-muted-foreground">{isClient ? "Annonces" : "Services"}</p>
-                </CardContent>
-              </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mes annonces</CardTitle>
+              <CardDescription>Gérez vos annonces d'événements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/mes-annonces">Voir mes annonces</Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 mx-auto rounded-xl bg-rose-100 flex items-center justify-center">
-                    <MessageSquare className="h-6 w-6 text-rose-600" />
-                  </div>
-                  <p className="text-3xl font-bold mt-3">{messagesCount}</p>
-                  <p className="text-sm text-muted-foreground">Conversations</p>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Mes services</CardTitle>
+              <CardDescription>Gérez vos services proposés</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/mes-services">Voir mes services</Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 mx-auto rounded-xl bg-amber-100 flex items-center justify-center">
-                    <Settings className="h-6 w-6 text-amber-600" />
-                  </div>
-                  <p className="text-sm font-medium mt-3">Paramètres</p>
-                  <Link href="/settings">
-                    <Button variant="link" className="text-amber-600 p-0 h-auto">
-                      Gérer
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Messages</CardTitle>
+              <CardDescription>Consultez vos conversations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/conversations">Voir les messages</Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions rapides</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {isClient ? (
-                  <>
-                    <Link href="/annonces/create" className="block">
-                      <Button className="w-full justify-start bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
-                        <Megaphone className="h-4 w-4 mr-2" />
-                        Créer une nouvelle annonce
-                      </Button>
-                    </Link>
-                    <Link href="/annonces/mes-annonces" className="block">
-                      <Button variant="outline" className="w-full justify-start bg-transparent">
-                        Voir mes annonces
-                      </Button>
-                    </Link>
-                    <Link href="/prestataires" className="block">
-                      <Button variant="outline" className="w-full justify-start bg-transparent">
-                        Rechercher des prestataires
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/services/create" className="block">
-                      <Button className="w-full justify-start bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600">
-                        <Briefcase className="h-4 w-4 mr-2" />
-                        Ajouter un nouveau service
-                      </Button>
-                    </Link>
-                    <Link href="/services/mes-services" className="block">
-                      <Button variant="outline" className="w-full justify-start bg-transparent">
-                        Voir mes services
-                      </Button>
-                    </Link>
-                    <Link href="/annonces" className="block">
-                      <Button variant="outline" className="w-full justify-start bg-transparent">
-                        Rechercher des annonces
-                      </Button>
-                    </Link>
-                  </>
-                )}
-                <Link href="/messages" className="block">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Mes messages
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Mon profil</CardTitle>
+              <CardDescription>Modifiez vos informations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/profile">Modifier le profil</Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
