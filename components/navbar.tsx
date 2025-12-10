@@ -60,7 +60,7 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push("/")
+    window.location.href = "/"
   }
 
   const navLinks = [

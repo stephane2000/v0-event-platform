@@ -32,11 +32,10 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      router.push("/")
-      router.refresh()
+      // Force a full page reload to ensure middleware updates session
+      window.location.href = "/"
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
-    } finally {
       setIsLoading(false)
     }
   }
