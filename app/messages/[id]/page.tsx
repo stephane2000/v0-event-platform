@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
-import { ChatInterface } from "@/components/chat-interface"
+import { ChatBox } from "@/components/chat-box"
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -14,41 +14,29 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     redirect("/auth/login")
   }
 
-  // Fetch conversation with participants
-  const { data: conversation } = await supabase
-    .from("conversations")
-    .select(`
-      *,
-      profiles_participant_1:profiles!conversations_participant_1_fkey(*),
-      profiles_participant_2:profiles!conversations_participant_2_fkey(*),
-      annonces(*),
-      services(*)
-    `)
-    .eq("id", id)
-    .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-    .single()
+  // Get conversation
+  const { data: conversation } = await supabase.from("conversations").select("*").eq("id", id).single()
 
   if (!conversation) {
     notFound()
   }
 
-  // Fetch messages
+  // Check if user is part of this conversation
+  if (conversation.participant_1 !== user.id && conversation.participant_2 !== user.id) {
+    redirect("/messages")
+  }
+
+  // Get other user profile
+  const otherUserId = conversation.participant_1 === user.id ? conversation.participant_2 : conversation.participant_1
+
+  const { data: otherUser } = await supabase.from("profiles").select("*").eq("id", otherUserId).single()
+
+  // Get initial messages
   const { data: messages } = await supabase
     .from("messages")
-    .select(`
-      *,
-      profiles(*)
-    `)
+    .select("*")
     .eq("conversation_id", id)
     .order("created_at", { ascending: true })
 
-  // Mark unread messages as read
-  await supabase
-    .from("messages")
-    .update({ is_read: true })
-    .eq("conversation_id", id)
-    .neq("sender_id", user.id)
-    .eq("is_read", false)
-
-  return <ChatInterface conversation={conversation} messages={messages || []} currentUserId={user.id} />
+  return <ChatBox conversationId={id} currentUserId={user.id} otherUser={otherUser} initialMessages={messages || []} />
 }

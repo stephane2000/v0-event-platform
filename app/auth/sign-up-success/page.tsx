@@ -1,25 +1,30 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Mail, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function SignUpSuccessPage() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center bg-background p-6 md:p-10">
-      <div className="w-full max-w-md">
-        <Card className="border-border/50">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Mail className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-semibold">Vérifiez votre email</CardTitle>
-            <CardDescription>Un email de confirmation vous a été envoyé</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-sm text-muted-foreground">
-              Cliquez sur le lien dans l'email pour activer votre compte et accéder à EventConnect.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6">
+      <Card className="w-full max-w-md border-0 shadow-xl text-center">
+        <CardHeader>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+            <Mail className="h-8 w-8 text-green-600" />
+          </div>
+          <CardTitle className="text-2xl">Vérifiez votre email</CardTitle>
+          <CardDescription>
+            Nous vous avons envoyé un email de confirmation. Cliquez sur le lien pour activer votre compte.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/auth/login">
+            <Button className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600">
+              Retour à la connexion
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }

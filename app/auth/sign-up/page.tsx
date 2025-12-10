@@ -7,18 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import type { UserRole } from "@/lib/types"
+import { Loader2, User, Briefcase } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
-  const [role, setRole] = useState<UserRole>("client")
+  const [role, setRole] = useState<"client" | "prestataire">("client")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -29,20 +28,8 @@ export default function SignUpPage() {
     setIsLoading(true)
     setError(null)
 
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas")
-      setIsLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères")
-      setIsLoading(false)
-      return
-    }
-
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -53,7 +40,21 @@ export default function SignUpPage() {
           },
         },
       })
-      if (error) throw error
+
+      if (signUpError) throw signUpError
+
+      if (data.user) {
+        // Create profile
+        const { error: profileError } = await supabase.from("profiles").upsert({
+          id: data.user.id,
+          email: email,
+          full_name: fullName,
+          role: role,
+        })
+
+        if (profileError) throw profileError
+      }
+
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
@@ -63,86 +64,113 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center bg-background p-6 md:p-10">
+    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <Card className="border-border/50">
+        <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-semibold">Inscription</CardTitle>
-            <CardDescription>Créez votre compte EventConnect</CardDescription>
+            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              EV
+            </div>
+            <CardTitle className="text-2xl">Créer un compte</CardTitle>
+            <CardDescription>Rejoignez la communauté EventHub</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignUp}>
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="fullName">Nom complet</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Jean Dupont"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
+            <form onSubmit={handleSignUp} className="space-y-5">
+              {/* Role Selection */}
+              <div className="space-y-3">
+                <Label>Je suis un(e)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole("client")}
+                    className={cn(
+                      "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                      role === "client"
+                        ? "border-rose-500 bg-rose-50 text-rose-700"
+                        : "border-border hover:border-muted-foreground",
+                    )}
+                  >
+                    <User className="h-6 w-6" />
+                    <span className="font-medium">Client</span>
+                    <span className="text-xs text-muted-foreground">Je cherche des prestataires</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("prestataire")}
+                    className={cn(
+                      "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                      role === "prestataire"
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-border hover:border-muted-foreground",
+                    )}
+                  >
+                    <Briefcase className="h-6 w-6" />
+                    <span className="font-medium">Prestataire</span>
+                    <span className="text-xs text-muted-foreground">Je propose mes services</span>
+                  </button>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="vous@exemple.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <Label>Je suis un</Label>
-                  <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="client" id="client" />
-                      <Label htmlFor="client" className="font-normal cursor-pointer">
-                        Client
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="prestataire" id="prestataire" />
-                      <Label htmlFor="prestataire" className="font-normal cursor-pointer">
-                        Prestataire
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Création du compte..." : "Créer mon compte"}
-                </Button>
               </div>
-              <div className="mt-4 text-center text-sm text-muted-foreground">
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nom complet</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Jean Dupont"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="vous@exemple.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Minimum 6 caractères"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>}
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Création...
+                  </>
+                ) : (
+                  "Créer mon compte"
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
                 Déjà un compte ?{" "}
-                <Link href="/auth/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                <Link href="/auth/login" className="text-rose-500 hover:underline font-medium">
                   Se connecter
                 </Link>
-              </div>
+              </p>
             </form>
           </CardContent>
         </Card>

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -31,6 +32,7 @@ export default function LoginPage() {
       })
       if (error) throw error
       router.push("/dashboard")
+      router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
     } finally {
@@ -39,48 +41,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center bg-background p-6 md:p-10">
-      <div className="w-full max-w-md">
-        <Card className="border-border/50">
+    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-semibold">Connexion</CardTitle>
-            <CardDescription>Connectez-vous à votre compte EventConnect</CardDescription>
+            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              EV
+            </div>
+            <CardTitle className="text-2xl">Connexion</CardTitle>
+            <CardDescription>Connectez-vous à votre compte EventHub</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin}>
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="vous@exemple.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Connexion..." : "Se connecter"}
-                </Button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="vous@exemple.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
-              <div className="mt-4 text-center text-sm text-muted-foreground">
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  "Se connecter"
+                )}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
                 Pas encore de compte ?{" "}
-                <Link href="/auth/sign-up" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                <Link href="/auth/sign-up" className="text-rose-500 hover:underline font-medium">
                   S'inscrire
                 </Link>
-              </div>
+              </p>
             </form>
           </CardContent>
         </Card>
