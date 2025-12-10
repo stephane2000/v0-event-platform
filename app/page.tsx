@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, Calendar, MapPin, Music, Camera, Utensils, Sparkles, Star } from "lucide-react"
+import { ArrowRight, Calendar, MapPin, Music, Camera, Utensils, Sparkles, Star, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 export default async function HomePage() {
@@ -15,13 +15,6 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(3)
 
-  const { data: recentAnnonces } = await supabase
-    .from("annonces")
-    .select("*, profiles(*)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(6)
-
   const { data: featuredPrestataires } = await supabase
     .from("profiles")
     .select("*")
@@ -29,18 +22,15 @@ export default async function HomePage() {
     .eq("featured", true)
     .limit(4)
 
-  const { data: topPrestataires } = await supabase.from("profiles").select("*").eq("role", "prestataire").limit(4)
-
-  // Use featured if available, otherwise recent
-  const displayAnnonces = featuredAnnonces?.length ? featuredAnnonces : recentAnnonces?.slice(0, 3)
-  const displayPrestataires = featuredPrestataires?.length ? featuredPrestataires : topPrestataires
-
   const categories = [
     { name: "DJ / Musique", icon: Music, color: "from-purple-500 to-pink-500" },
     { name: "Photographe", icon: Camera, color: "from-blue-500 to-cyan-500" },
     { name: "Traiteur", icon: Utensils, color: "from-orange-500 to-red-500" },
     { name: "Décoration", icon: Sparkles, color: "from-green-500 to-emerald-500" },
   ]
+
+  const hasFeaturedAnnonces = featuredAnnonces && featuredAnnonces.length > 0
+  const hasFeaturedPrestataires = featuredPrestataires && featuredPrestataires.length > 0
 
   return (
     <div className="flex flex-col">
@@ -104,30 +94,25 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured/Recent Annonces */}
-      {displayAnnonces && displayAnnonces.length > 0 && (
-        <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                {featuredAnnonces?.length ? (
-                  <>
-                    <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
-                    Annonces en vedette
-                  </>
-                ) : (
-                  "Dernières annonces"
-                )}
-              </h2>
-              <Link href="/annonces">
-                <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
-                  Voir tout
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+      {/* Featured Annonces Section - Show empty state if none featured */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
+              Annonces en vedette
+            </h2>
+            <Link href="/annonces">
+              <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
+                Voir tout
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {hasFeaturedAnnonces ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayAnnonces.map((annonce) => (
+              {featuredAnnonces.map((annonce) => (
                 <Link key={annonce.id} href={`/annonces/${annonce.id}`}>
                   <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                     <div className="aspect-video bg-gradient-to-br from-rose-100 to-orange-100 relative">
@@ -143,12 +128,10 @@ export default async function HomePage() {
                         <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium">
                           {annonce.event_type}
                         </span>
-                        {annonce.featured && (
-                          <span className="px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-medium flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-white" />
-                            Vedette
-                          </span>
-                        )}
+                        <span className="px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-medium flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-white" />
+                          Vedette
+                        </span>
                       </div>
                     </div>
                     <CardContent className="p-5">
@@ -172,43 +155,52 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <h3 className="font-semibold text-lg text-muted-foreground mb-2">Aucune annonce mise en avant</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Découvrez toutes les annonces disponibles sur la plateforme.
+                </p>
+                <Link href="/annonces">
+                  <Button variant="outline">
+                    Voir toutes les annonces
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
 
-      {/* Featured/Top Prestataires */}
-      {displayPrestataires && displayPrestataires.length > 0 && (
-        <section className="py-16 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                {featuredPrestataires?.length ? (
-                  <>
-                    <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
-                    Prestataires en vedette
-                  </>
-                ) : (
-                  "Prestataires en vedette"
-                )}
-              </h2>
-              <Link href="/prestataires">
-                <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
-                  Voir tout
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+      {/* Featured Prestataires Section - Show empty state if none featured */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
+              Prestataires en vedette
+            </h2>
+            <Link href="/prestataires">
+              <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
+                Voir tout
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {hasFeaturedPrestataires ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayPrestataires.map((presta) => (
+              {featuredPrestataires.map((presta) => (
                 <Link key={presta.id} href={`/prestataire/${presta.id}`}>
                   <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
-                    {presta.featured && (
-                      <div className="absolute -top-2 -right-2 z-10">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white">
-                          <Star className="h-3 w-3 fill-white" />
-                        </span>
-                      </div>
-                    )}
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white">
+                        <Star className="h-3 w-3 fill-white" />
+                      </span>
+                    </div>
                     <CardContent className="p-5 text-center">
                       <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden ring-4 ring-rose-500/20">
                         <img
@@ -229,9 +221,25 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <h3 className="font-semibold text-lg text-muted-foreground mb-2">Aucun prestataire mis en avant</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Découvrez tous les prestataires disponibles sur la plateforme.
+                </p>
+                <Link href="/prestataires">
+                  <Button variant="outline">
+                    Voir tous les prestataires
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-rose-500 to-orange-500">

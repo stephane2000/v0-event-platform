@@ -29,22 +29,38 @@ export default function CreateAnnoncePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isCheckingRole, setIsCheckingRole] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
+
     async function checkUserRole() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          router.push("/auth/login")
+          return
+        }
+
+        setUserId(user.id)
+
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-        setUserRole(profile?.role || null)
+
+        setUserRole(profile?.role || "client")
+      } catch (error) {
+        console.error("Error checking role:", error)
+        setUserRole("client")
+      } finally {
+        setIsCheckingRole(false)
       }
-      setIsCheckingRole(false)
     }
+
     checkUserRole()
-  }, [supabase])
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,18 +70,19 @@ export default function CreateAnnoncePage() {
       return
     }
 
+    if (!userId) {
+      toast.error("Vous devez être connecté")
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) throw new Error("Non authentifié")
-
+      const supabase = createClient()
       const location = departement || region
 
       const { error } = await supabase.from("annonces").insert({
-        user_id: user.id,
+        user_id: userId,
         title,
         description,
         event_type: eventType,
@@ -82,6 +99,7 @@ export default function CreateAnnoncePage() {
       toast.success("Annonce créée avec succès!")
       router.push("/annonces/mes-annonces")
     } catch (error) {
+      console.error("Error creating annonce:", error)
       toast.error(error instanceof Error ? error.message : "Erreur lors de la création")
     } finally {
       setIsLoading(false)

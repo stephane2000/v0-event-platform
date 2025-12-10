@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,11 +29,10 @@ export default function LoginPage() {
         password,
       })
       if (error) throw error
-      router.push("/dashboard")
-      router.refresh()
+
+      window.location.href = "/"
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
-    } finally {
       setIsLoading(false)
     }
   }
@@ -46,10 +43,10 @@ export default function LoginPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
-              EV
+              PE
             </div>
             <CardTitle className="text-2xl">Connexion</CardTitle>
-            <CardDescription>Connectez-vous à votre compte EventHub</CardDescription>
+            <CardDescription>Connectez-vous à votre compte Prest'Event</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
