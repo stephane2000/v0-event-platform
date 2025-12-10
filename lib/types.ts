@@ -7,6 +7,8 @@ export interface Profile {
   role: "client" | "prestataire"
   location: string | null
   bio: string | null
+  featured?: boolean
+  is_admin?: boolean
   created_at: string
   updated_at: string
 }
@@ -23,6 +25,7 @@ export interface Annonce {
   budget_max: number | null
   status: "active" | "closed" | "draft"
   images?: string[]
+  featured?: boolean
   created_at: string
   updated_at: string
   profiles?: Profile

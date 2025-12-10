@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client"
 import type { Profile } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { Menu, MessageSquare, Plus, User, LogOut, Settings, Home, Megaphone, Briefcase } from "lucide-react"
+import { Menu, MessageSquare, Plus, User, LogOut, Settings, Home, Megaphone, Briefcase, Shield } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -83,13 +83,12 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4">
         <nav className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm group-hover:scale-105 transition-transform">
-              EV
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm group-hover:scale-105 transition-transform shadow-lg shadow-rose-500/25">
+              PE
             </div>
-            <span className="hidden sm:inline bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
-              EventHub
+            <span className="hidden sm:inline bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent font-extrabold">
+              Prest'Event
             </span>
           </Link>
 
@@ -166,10 +165,14 @@ export function Navbar() {
                       <span
                         className={cn(
                           "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1",
-                          user.role === "prestataire" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700",
+                          user.is_admin
+                            ? "bg-purple-100 text-purple-700"
+                            : user.role === "prestataire"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700",
                         )}
                       >
-                        {user.role === "prestataire" ? "Prestataire" : "Client"}
+                        {user.is_admin ? "Admin" : user.role === "prestataire" ? "Prestataire" : "Client"}
                       </span>
                     </div>
                     <DropdownMenuSeparator />
@@ -206,6 +209,17 @@ export function Navbar() {
                         Paramètres
                       </Link>
                     </DropdownMenuItem>
+                    {user.is_admin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="cursor-pointer text-purple-600">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Administration
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -242,9 +256,12 @@ export function Navbar() {
               <SheetContent side="right" className="w-[300px] p-0">
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                        PE
+                      </div>
                       <span className="font-bold text-lg bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
-                        EventHub
+                        Prest'Event
                       </span>
                     </div>
                   </div>
@@ -264,6 +281,16 @@ export function Navbar() {
                           {link.label}
                         </Link>
                       ))}
+                      {user?.is_admin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg text-purple-600 hover:bg-purple-50"
+                        >
+                          <Shield className="w-5 h-5" />
+                          Administration
+                        </Link>
+                      )}
                     </div>
                     {user && (
                       <div className="mt-6 pt-6 border-t space-y-2">

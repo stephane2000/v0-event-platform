@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Calendar, Euro, Search } from "lucide-react"
 import Link from "next/link"
-import { AnnonceFilters } from "@/components/annonce-filters"
+import { ImageCarousel } from "@/components/image-carousel"
+import { TopFilters } from "@/components/top-filters"
 
 export default async function AnnoncesPage({
   searchParams,
@@ -38,79 +39,79 @@ export default async function AnnoncesPage({
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside className="lg:w-72 shrink-0">
-            <AnnonceFilters />
-          </aside>
+        <TopFilters type="annonces" />
 
-          {/* Annonces Grid */}
-          <div className="flex-1">
-            {!annonces || annonces.length === 0 ? (
-              <Card className="p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                  <Search className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Aucune annonce trouvée</h3>
-                <p className="text-muted-foreground">Essayez de modifier vos filtres de recherche</p>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {annonces.map((annonce) => (
-                  <Link key={annonce.id} href={`/annonces/${annonce.id}`}>
-                    <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
-                      <div className="aspect-[16/9] bg-gradient-to-br from-rose-100 to-orange-100 relative overflow-hidden">
-                        <img
-                          src={`/.jpg?height=200&width=400&query=${encodeURIComponent(annonce.event_type + " event")}`}
-                          alt={annonce.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <div className="absolute top-3 left-3 flex gap-2">
-                          <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium">
-                            {annonce.event_type}
-                          </span>
-                          <span className="px-3 py-1 bg-green-500 text-white rounded-full text-xs font-medium">
-                            Client
-                          </span>
-                        </div>
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <h3 className="font-semibold text-lg text-white line-clamp-1">{annonce.title}</h3>
-                        </div>
-                      </div>
-                      <CardContent className="p-5">
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{annonce.description}</p>
-                        <div className="flex flex-wrap items-center gap-3 text-sm">
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-4 w-4" />
-                            {annonce.location}
-                          </span>
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(annonce.event_date).toLocaleDateString("fr-FR", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </span>
-                          {(annonce.budget_min || annonce.budget_max) && (
-                            <span className="flex items-center gap-1 text-rose-600 font-medium">
-                              <Euro className="h-4 w-4" />
-                              {annonce.budget_min && annonce.budget_max
-                                ? `${annonce.budget_min} - ${annonce.budget_max}€`
-                                : annonce.budget_max
-                                  ? `Max ${annonce.budget_max}€`
-                                  : `Min ${annonce.budget_min}€`}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+        {/* Annonces Grid */}
+        <div className="mt-8">
+          {!annonces || annonces.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-            )}
-          </div>
+              <h3 className="font-semibold text-lg mb-2">Aucune annonce trouvée</h3>
+              <p className="text-muted-foreground">Essayez de modifier vos filtres de recherche</p>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {annonces.map((annonce) => (
+                <Link key={annonce.id} href={`/annonces/${annonce.id}`}>
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                    <div className="relative">
+                      <ImageCarousel
+                        images={
+                          annonce.images?.length
+                            ? annonce.images
+                            : [
+                                `/placeholder.svg?height=200&width=400&query=${encodeURIComponent(annonce.event_type + " event")}`,
+                              ]
+                        }
+                        alt={annonce.title}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                      <div className="absolute top-3 left-3 flex gap-2 z-10">
+                        <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium">
+                          {annonce.event_type}
+                        </span>
+                        <span className="px-3 py-1 bg-green-500 text-white rounded-full text-xs font-medium">
+                          Client
+                        </span>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3 z-10">
+                        <h3 className="font-semibold text-lg text-white line-clamp-1">{annonce.title}</h3>
+                      </div>
+                    </div>
+                    <CardContent className="p-5">
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{annonce.description}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          {annonce.location}
+                        </span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(annonce.event_date).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                        {(annonce.budget_min || annonce.budget_max) && (
+                          <span className="flex items-center gap-1 text-rose-600 font-medium">
+                            <Euro className="h-4 w-4" />
+                            {annonce.budget_min && annonce.budget_max
+                              ? `${annonce.budget_min} - ${annonce.budget_max}€`
+                              : annonce.budget_max
+                                ? `Max ${annonce.budget_max}€`
+                                : `Min ${annonce.budget_min}€`}
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

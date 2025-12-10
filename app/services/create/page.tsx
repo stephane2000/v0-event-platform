@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SERVICE_CATEGORIES, REGIONS_DEPARTEMENTS } from "@/lib/constants"
+import { ImageUpload } from "@/components/image-upload"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { Loader2, Briefcase, MapPin, Euro, FileText, AlertCircle } from "lucide-react"
+import { Loader2, Briefcase, MapPin, Euro, FileText, AlertCircle, ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 
 export default function CreateServicePage() {
@@ -23,6 +24,7 @@ export default function CreateServicePage() {
   const [departement, setDepartement] = useState("")
   const [priceMin, setPriceMin] = useState("")
   const [priceMax, setPriceMax] = useState("")
+  const [images, setImages] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isCheckingRole, setIsCheckingRole] = useState(true)
@@ -45,6 +47,12 @@ export default function CreateServicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (images.length === 0) {
+      toast.error("Veuillez ajouter au moins une image")
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -64,7 +72,7 @@ export default function CreateServicePage() {
         price_min: priceMin ? Number.parseInt(priceMin) : null,
         price_max: priceMax ? Number.parseInt(priceMax) : null,
         status: "active",
-        images: [],
+        images,
       })
 
       if (error) throw error
@@ -124,6 +132,14 @@ export default function CreateServicePage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Photos de votre service *
+                </Label>
+                <ImageUpload images={images} onChange={setImages} maxImages={5} required />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="name" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />

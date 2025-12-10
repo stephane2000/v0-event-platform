@@ -10,7 +10,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "EventHub - Trouvez les meilleurs prestataires événementiels",
+  title: "Prest'Event - Trouvez les meilleurs prestataires événementiels",
   description:
     "Plateforme de mise en relation entre clients et prestataires pour l'organisation d'événements. Trouvez DJ, traiteurs, photographes et plus encore.",
     generator: 'v0.app'

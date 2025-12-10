@@ -1,20 +1,39 @@
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, Calendar, MapPin, Music, Camera, Utensils, Sparkles } from "lucide-react"
+import { ArrowRight, Calendar, MapPin, Music, Camera, Utensils, Sparkles, Star } from "lucide-react"
 import Link from "next/link"
 
 export default async function HomePage() {
   const supabase = await createClient()
+
+  const { data: featuredAnnonces } = await supabase
+    .from("annonces")
+    .select("*, profiles(*)")
+    .eq("status", "active")
+    .eq("featured", true)
+    .order("created_at", { ascending: false })
+    .limit(3)
 
   const { data: recentAnnonces } = await supabase
     .from("annonces")
     .select("*, profiles(*)")
     .eq("status", "active")
     .order("created_at", { ascending: false })
-    .limit(3)
+    .limit(6)
+
+  const { data: featuredPrestataires } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "prestataire")
+    .eq("featured", true)
+    .limit(4)
 
   const { data: topPrestataires } = await supabase.from("profiles").select("*").eq("role", "prestataire").limit(4)
+
+  // Use featured if available, otherwise recent
+  const displayAnnonces = featuredAnnonces?.length ? featuredAnnonces : recentAnnonces?.slice(0, 3)
+  const displayPrestataires = featuredPrestataires?.length ? featuredPrestataires : topPrestataires
 
   const categories = [
     { name: "DJ / Musique", icon: Music, color: "from-purple-500 to-pink-500" },
@@ -39,7 +58,8 @@ export default async function HomePage() {
               en toute sérénité
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Trouvez les meilleurs prestataires pour vos mariages, anniversaires, séminaires et tous vos événements.
+              Prest'Event met en relation clients et prestataires pour vos mariages, anniversaires, séminaires et tous
+              vos événements.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/annonces">
@@ -84,12 +104,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Recent Annonces */}
-      {recentAnnonces && recentAnnonces.length > 0 && (
+      {/* Featured/Recent Annonces */}
+      {displayAnnonces && displayAnnonces.length > 0 && (
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">Dernières annonces</h2>
+              <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                {featuredAnnonces?.length ? (
+                  <>
+                    <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
+                    Annonces en vedette
+                  </>
+                ) : (
+                  "Dernières annonces"
+                )}
+              </h2>
               <Link href="/annonces">
                 <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
                   Voir tout
@@ -98,18 +127,29 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentAnnonces.map((annonce) => (
+              {displayAnnonces.map((annonce) => (
                 <Link key={annonce.id} href={`/annonces/${annonce.id}`}>
                   <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                     <div className="aspect-video bg-gradient-to-br from-rose-100 to-orange-100 relative">
                       <img
-                        src={`/.jpg?height=200&width=400&query=${encodeURIComponent(annonce.event_type || "event")}`}
+                        src={
+                          annonce.images?.[0] ||
+                          `/placeholder.svg?height=200&width=400&query=${encodeURIComponent(annonce.event_type || "event")}`
+                        }
                         alt={annonce.title}
                         className="w-full h-full object-cover"
                       />
-                      <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium">
-                        {annonce.event_type}
-                      </span>
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium">
+                          {annonce.event_type}
+                        </span>
+                        {annonce.featured && (
+                          <span className="px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-medium flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-white" />
+                            Vedette
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <CardContent className="p-5">
                       <h3 className="font-semibold text-lg mb-2 line-clamp-1">{annonce.title}</h3>
@@ -136,12 +176,21 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Top Prestataires */}
-      {topPrestataires && topPrestataires.length > 0 && (
+      {/* Featured/Top Prestataires */}
+      {displayPrestataires && displayPrestataires.length > 0 && (
         <section className="py-16 bg-background">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">Prestataires en vedette</h2>
+              <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                {featuredPrestataires?.length ? (
+                  <>
+                    <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
+                    Prestataires en vedette
+                  </>
+                ) : (
+                  "Prestataires en vedette"
+                )}
+              </h2>
               <Link href="/prestataires">
                 <Button variant="ghost" className="text-rose-500 hover:text-rose-600">
                   Voir tout
@@ -150,9 +199,16 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {topPrestataires.map((presta) => (
+              {displayPrestataires.map((presta) => (
                 <Link key={presta.id} href={`/prestataire/${presta.id}`}>
-                  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
+                    {presta.featured && (
+                      <div className="absolute -top-2 -right-2 z-10">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white">
+                          <Star className="h-3 w-3 fill-white" />
+                        </span>
+                      </div>
+                    )}
                     <CardContent className="p-5 text-center">
                       <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden ring-4 ring-rose-500/20">
                         <img
@@ -182,7 +238,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Prêt à organiser votre événement ?</h2>
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-            Rejoignez des milliers d'utilisateurs qui ont trouvé leurs prestataires idéaux sur EventHub.
+            Rejoignez des milliers d'utilisateurs qui ont trouvé leurs prestataires idéaux sur Prest'Event.
           </p>
           <Link href="/auth/sign-up">
             <Button size="lg" variant="secondary" className="font-semibold">
@@ -199,14 +255,14 @@ export default async function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 font-bold text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                EV
+                PE
               </div>
               <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
-                EventHub
+                Prest'Event
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} EventHub. Tous droits réservés.
+              © {new Date().getFullYear()} Prest'Event. Tous droits réservés.
             </p>
           </div>
         </div>
