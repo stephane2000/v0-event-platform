@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -23,9 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="font-sans antialiased min-h-screen bg-background">
+      <body className="font-sans antialiased min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main>{children}</main>
+        <main className="flex-1">{children}</main>
+        <Footer />
         <Toaster position="top-center" />
         <Analytics />
       </body>

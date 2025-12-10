@@ -256,25 +256,6 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 bg-muted/50 border-t">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 font-bold text-xl">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                PE
-              </div>
-              <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
-                Prest'Event
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Prest'Event. Tous droits réservés.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
