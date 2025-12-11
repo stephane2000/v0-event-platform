@@ -67,14 +67,23 @@ export default function AdminPage() {
   const toggleFeaturedAnnonce = async (id: string, currentValue: boolean) => {
     setUpdatingId(id)
     try {
-      const { error } = await supabase.from("annonces").update({ featured: !currentValue }).eq("id", id)
+      const { error } = await supabase.rpc("toggle_annonce_featured", {
+        annonce_id: id,
+        new_featured_status: !currentValue,
+      })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error updating annonce featured status:", error)
+        throw error
+      }
+
+      console.log("Annonce updated successfully")
 
       setAnnonces((prev) => prev.map((a) => (a.id === id ? { ...a, featured: !currentValue } : a)))
 
       toast.success(!currentValue ? "Annonce mise en avant" : "Annonce retirée de la mise en avant")
     } catch (error) {
+      console.error("Full error:", error)
       toast.error("Erreur lors de la mise à jour")
     } finally {
       setUpdatingId(null)
@@ -84,14 +93,17 @@ export default function AdminPage() {
   const toggleFeaturedPrestataire = async (id: string, currentValue: boolean) => {
     setUpdatingId(id)
     try {
-      const { data, error } = await supabase.from("profiles").update({ featured: !currentValue }).eq("id", id).select()
+      const { error } = await supabase.rpc("toggle_profile_featured", {
+        profile_id: id,
+        new_featured_status: !currentValue,
+      })
 
       if (error) {
         console.error("Error updating prestataire featured status:", error)
         throw error
       }
 
-      console.log("Prestataire updated successfully:", data)
+      console.log("Prestataire updated successfully")
 
       setPrestataires((prev) => prev.map((p) => (p.id === id ? { ...p, featured: !currentValue } : p)))
 
