@@ -84,14 +84,20 @@ export default function AdminPage() {
   const toggleFeaturedPrestataire = async (id: string, currentValue: boolean) => {
     setUpdatingId(id)
     try {
-      const { error } = await supabase.from("profiles").update({ featured: !currentValue }).eq("id", id)
+      const { data, error } = await supabase.from("profiles").update({ featured: !currentValue }).eq("id", id).select()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error updating prestataire featured status:", error)
+        throw error
+      }
+
+      console.log("Prestataire updated successfully:", data)
 
       setPrestataires((prev) => prev.map((p) => (p.id === id ? { ...p, featured: !currentValue } : p)))
 
       toast.success(!currentValue ? "Prestataire mis en avant" : "Prestataire retiré de la mise en avant")
     } catch (error) {
+      console.error("Full error:", error)
       toast.error("Erreur lors de la mise à jour")
     } finally {
       setUpdatingId(null)
