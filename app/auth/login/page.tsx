@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -38,8 +37,8 @@ export default function LoginPage() {
         throw new Error(data.error || "Une erreur est survenue")
       }
 
-      // Redirect after successful login
-      router.push("/dashboard")
+      // Redirect to home page after successful login
+      router.push("/")
       router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
@@ -48,15 +47,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6">
+    <div className="flex min-h-screen w-full items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
-              PE
-            </div>
             <CardTitle className="text-2xl">Connexion</CardTitle>
-            <CardDescription>Connectez-vous à votre compte Prest'Event</CardDescription>
+            <CardDescription>Connectez-vous à votre compte</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -86,7 +82,7 @@ export default function LoginPage() {
               {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -100,7 +96,7 @@ export default function LoginPage() {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Pas encore de compte ?{" "}
-                <Link href="/auth/sign-up" className="text-rose-500 hover:underline font-medium">
+                <Link href="/auth/sign-up" className="text-primary hover:underline font-medium">
                   S'inscrire
                 </Link>
               </p>

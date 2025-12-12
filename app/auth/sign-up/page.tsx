@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,14 +9,13 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Loader2, User, Briefcase } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [role, setRole] = useState<"client" | "prestataire">("client")
+  const [username, setUsername] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -33,10 +31,8 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
           data: {
-            full_name: fullName,
-            role: role,
+            username: username,
           },
         },
       })
@@ -44,18 +40,9 @@ export default function SignUpPage() {
       if (signUpError) throw signUpError
 
       if (data.user) {
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").upsert({
-          id: data.user.id,
-          email: email,
-          full_name: fullName,
-          role: role,
-        })
-
-        if (profileError) throw profileError
+        toast.success("Compte créé avec succès !")
+        router.push("/auth/login")
       }
-
-      router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue")
     } finally {
@@ -64,62 +51,24 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6">
+    <div className="flex min-h-screen w-full items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
-              PE
-            </div>
             <CardTitle className="text-2xl">Créer un compte</CardTitle>
-            <CardDescription>Rejoignez la communauté Prest'Event</CardDescription>
+            <CardDescription>Inscrivez-vous pour continuer</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-5">
-              {/* Role Selection */}
-              <div className="space-y-3">
-                <Label>Je suis un(e)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole("client")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
-                      role === "client"
-                        ? "border-rose-500 bg-rose-50 text-rose-700"
-                        : "border-border hover:border-muted-foreground",
-                    )}
-                  >
-                    <User className="h-6 w-6" />
-                    <span className="font-medium">Client</span>
-                    <span className="text-xs text-muted-foreground">Je cherche des prestataires</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole("prestataire")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
-                      role === "prestataire"
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-border hover:border-muted-foreground",
-                    )}
-                  >
-                    <Briefcase className="h-6 w-6" />
-                    <span className="font-medium">Prestataire</span>
-                    <span className="text-xs text-muted-foreground">Je propose mes services</span>
-                  </button>
-                </div>
-              </div>
-
+            <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nom complet</Label>
+                <Label htmlFor="username">Pseudo</Label>
                 <Input
-                  id="fullName"
+                  id="username"
                   type="text"
-                  placeholder="Jean Dupont"
+                  placeholder="votre_pseudo"
                   required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
 
@@ -129,6 +78,7 @@ export default function SignUpPage() {
                   id="email"
                   type="email"
                   placeholder="vous@exemple.com"
+                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -141,6 +91,7 @@ export default function SignUpPage() {
                   id="password"
                   type="password"
                   placeholder="Minimum 6 caractères"
+                  autoComplete="new-password"
                   required
                   minLength={6}
                   value={password}
@@ -152,7 +103,7 @@ export default function SignUpPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -167,7 +118,7 @@ export default function SignUpPage() {
 
               <p className="text-center text-sm text-muted-foreground">
                 Déjà un compte ?{" "}
-                <Link href="/auth/login" className="text-rose-500 hover:underline font-medium">
+                <Link href="/auth/login" className="text-primary hover:underline font-medium">
                   Se connecter
                 </Link>
               </p>

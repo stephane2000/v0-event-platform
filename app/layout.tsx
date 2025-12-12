@@ -3,18 +3,15 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Prest'Event - Trouvez les meilleurs prestataires événementiels",
-  description:
-    "Plateforme de mise en relation entre clients et prestataires pour l'organisation d'événements. Trouvez DJ, traiteurs, photographes et plus encore.",
-    generator: 'v0.app'
+  title: "Application Simple",
+  description: "Application de connexion simple avec Supabase",
+  generator: 'v0.app'
 }
 
 export default function RootLayout({
@@ -24,10 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="font-sans antialiased min-h-screen bg-background flex flex-col">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body className="font-sans antialiased min-h-screen bg-background">
+        {children}
         <Toaster position="top-center" />
         <Analytics />
       </body>
